@@ -1200,6 +1200,7 @@
         document.getElementById('albumCover').src = songs[currentSongIndex].cover;
         document.getElementById('totalTime').textContent = songs[currentSongIndex].duration;
         audioPlayer.src = songs[currentSongIndex].src;
+        audioPlayer.load(); // Pastikan audio dimuat ulang
       }
     }
 
@@ -1210,7 +1211,7 @@
       } else {
         audioPlayer.play().catch(error => {
           console.error('Error playing audio:', error);
-          alert('Gagal memutar. Cek file musik di folder songs/ atau cover di images/!');
+          alert('Gagal memutar. Pastikan file MP3 ada di folder "songs/" dan cover ada di "images/". Cek nama file!');
         });
         document.getElementById('playPauseBtn').textContent = '⏸️';
       }
@@ -1222,7 +1223,6 @@
         currentSongIndex--;
         updateTrackInfo();
         if (isPlaying) audioPlayer.play();
-        updateProgress();
       }
     }
 
@@ -1231,7 +1231,6 @@
         currentSongIndex++;
         updateTrackInfo();
         if (isPlaying) audioPlayer.play();
-        updateProgress();
       }
     }
 
@@ -1239,22 +1238,32 @@
       currentSongIndex = index;
       updateTrackInfo();
       if (isPlaying) audioPlayer.play();
-      updateProgress();
     }
 
     audioPlayer.addEventListener('timeupdate', () => {
       const currentTime = audioPlayer.currentTime;
       const duration = audioPlayer.duration || 0;
       const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
-      document.getElementById('musicProgress').style.width = progressPercent + '%';
+      musicProgress.style.width = progressPercent + '%';
       const currentMinutes = Math.floor(currentTime / 60);
       const currentSeconds = Math.floor(currentTime % 60);
       document.getElementById('currentTime').textContent = `${currentMinutes}:${currentSeconds.toString().padStart(2, '0')}`;
     });
 
+    audioPlayer.addEventListener('loadedmetadata', () => {
+      document.getElementById('totalTime').textContent = new Date(audioPlayer.duration * 1000).toISOString().substr(14, 5);
+    });
+
+    audioPlayer.addEventListener('error', (e) => {
+      console.error('Audio error:', e);
+      alert('Error memuat file audio. Cek file di "songs/"!');
+    });
+
     function initMusicScreen() {
       updateTrackInfo();
-      updateProgress();
+      if (audioPlayer.readyState >= 1) {
+        document.getElementById('totalTime').textContent = new Date(audioPlayer.duration * 1000).toISOString().substr(14, 5);
+      }
     }
 
     function updateProgress() {
